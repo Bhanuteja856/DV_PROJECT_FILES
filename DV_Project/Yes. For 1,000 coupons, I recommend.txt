@@ -1,0 +1,680 @@
+Yes. For 1,000 coupons, I recommend building this as a small web application rather than trying to manage everything manually in Excel/WhatsApp.
+I'll give you a from-zero setup procedure, including the exact tools, accounts, database fields, payment flow, coupon generation, QR verification, delivery, dashboard, testing, and launch.
+One caveat remains: don't accept the ₹100 payments until the exact paid-random-draw structure has been checked for legal compliance in India/Kerala. The technical system below can be used for a legally permissible promotion.
+Overall system
+Customer
+   ↓
+Landing Page
+   ↓
+Registration
+   ↓
+Payment Gateway
+   ↓
+Payment Webhook
+   ↓
+Database
+   ↓
+Unique Coupon Generator
+   ↓
+QR Generator
+   ↓
+Coupon PNG/PDF
+   ↓
+WhatsApp + Email
+   ↓
+Public QR Verification
+   ↓
+Admin Dashboard
+STEP 1 — Decide the basic information
+Before creating anything, create a document containing:
+Parameter
+Example
+Event name
+Sakleshpur Fest 2026
+Coupon price
+₹100
+Maximum coupons
+1,000
+Start date
+TBD
+Closing date
+TBD
+Result date
+TBD
+Prize
+TBD
+Organizer
+Your organization
+Contact
+Business mobile
+Website
+Your domain
+Also prepare:
+Terms & conditions
+Eligibility
+Privacy policy
+Refund policy
+Winner/result procedure
+Contact details
+Have the promotional structure reviewed before launch.
+STEP 2 — Buy a domain
+Buy a short domain.
+Examples:
+sakleshpurfest.in
+sakleshpur2026.in
+yourbrand.in
+You don't need an expensive website.
+You need:
+Domain + SSL + hosting
+Your website will eventually contain:
+/
+        Home
+
+/buy
+        Registration + payment
+
+/success
+        Coupon generated
+
+/verify/CODE
+        Coupon verification
+
+/rules
+        Terms
+
+/contact
+        Contact
+
+/admin
+        Private dashboard
+STEP 3 — Create your business email
+Don't use a personal Gmail account for the public campaign.
+Create:
+support@yourdomain.in
+and preferably:
+admin@yourdomain.in
+Use support@ for customer communication.
+STEP 4 — Create your database
+For 1,000 coupons, I recommend Supabase because it gives you a hosted PostgreSQL database and authentication/API capabilities without having to maintain your own database server.
+Create a project.
+Then create a table:
+coupons
+Columns:
+id
+coupon_number
+coupon_code
+customer_name
+mobile
+email
+payment_id
+payment_amount
+payment_status
+coupon_status
+created_at
+qr_url
+coupon_image_url
+delivery_status
+winner_status
+STEP 5 — Add important database rules
+This is extremely important.
+Set:
+coupon_code
+UNIQUE
+coupon_number
+UNIQUE
+payment_id
+UNIQUE
+This prevents accidental duplication.
+For example:
+SKL26-X7P4-92KM
+can exist only once.
+STEP 6 — Create your coupon numbering system
+Use two identifiers.
+Public number
+0001
+0002
+0003
+...
+1000
+Secure code
+SKL26-X7P4-92KM
+SKL26-P8D3-71QA
+SKL26-M2R7-45LK
+The customer can see both.
+Your database should associate:
+0001 → SKL26-X7P4-92KM
+STEP 7 — Generate secure codes
+Don't generate codes like:
+SKL26-0001
+SKL26-0002
+because people can easily guess them.
+Generate random characters.
+For example:
+SKL26-A8K4-92PX
+SKL26-T7M2-48QA
+SKL26-R9F6-13LK
+Use a cryptographically secure random generator in your backend.
+Do not generate them using a spreadsheet formula and assume they are secure.
+STEP 8 — Create the coupon design
+Use Canva for the master design.
+Recommended size:
+1080 × 1350 px
+or an A6-style digital ticket.
+Layout:
+┌──────────────────────────────┐
+│                              │
+│       SAKLESHPUR FEST        │
+│             2026             │
+│                              │
+│       DIGITAL COUPON         │
+│                              │
+│             ₹100             │
+│                              │
+│      COUPON NO. 0472         │
+│                              │
+│      SKL26-X7P4-92KM         │
+│                              │
+│             QR               │
+│                              │
+│       SCAN TO VERIFY         │
+│                              │
+│       06 SEPTEMBER 2026      │
+│                              │
+└──────────────────────────────┘
+Don't manually create 1,000 designs.
+Create one template.
+Your software inserts:
+Coupon number
+Unique code
+QR
+Customer name, if required
+Date
+STEP 9 — Create the QR system
+The QR should not contain all the customer information.
+Instead, encode only the verification URL.
+For example:
+https://yourdomain.in/verify/SKL26-X7P4-92KM
+When someone scans it, your website checks the database.
+STEP 10 — Build the verification page
+When someone visits:
+/verify/SKL26-X7P4-92KM
+your backend searches:
+coupon_code =
+SKL26-X7P4-92KM
+If found:
+VALID
+SAKLESHPUR FEST 2026
+
+Coupon No: 0472
+
+Status: VALID
+
+Issued: 24 August 2026
+If not found:
+INVALID
+This coupon could not be verified.
+If cancelled:
+CANCELLED
+If already used:
+USED
+STEP 11 — Create the registration page
+Your /buy page should contain:
+PARTICIPANT DETAILS
+Full name
+[________________]
+Mobile
+[________________]
+Email
+[________________]
+Quantity
+[ 1 ]
+Then:
+TOTAL
+₹100
+Then:
+CONTINUE TO PAYMENT
+Don't ask for unnecessary personal information.
+STEP 12 — Add OTP verification
+Before payment, optionally verify the mobile number.
+Flow:
+Enter mobile
+      ↓
+Send OTP
+      ↓
+Enter OTP
+      ↓
+Verified
+      ↓
+Continue payment
+This reduces fake registrations.
+If you use WhatsApp delivery, the verified mobile number also helps delivery.
+STEP 13 — Create your payment gateway account
+Choose an Indian payment gateway that supports:
+UPI
+Cards
+Net banking
+Payment links/API
+Webhooks
+Create the merchant account and complete the required KYC/business verification.
+You'll receive credentials such as:
+KEY_ID
+KEY_SECRET
+WEBHOOK_SECRET
+Never put secret credentials in your website's frontend code.
+STEP 14 — Create the payment order
+When customer clicks:
+PAY ₹100
+your backend creates an order.
+For example:
+Order ID:
+ORD-20260824-000472
+
+Amount:
+₹100
+
+Customer:
+Rahul
+
+Mobile:
+XXXXXXXXXX
+Then the payment gateway handles the payment.
+STEP 15 — Don't trust the browser's payment result
+This is a major security point.
+Don't do:
+Payment screen says SUCCESS
+       ↓
+Generate coupon
+Instead:
+Payment
+   ↓
+Gateway
+   ↓
+Webhook
+   ↓
+Your backend
+   ↓
+Verify payment signature
+   ↓
+Check amount
+   ↓
+Check payment ID
+   ↓
+Generate coupon
+The webhook is your authoritative payment confirmation.
+STEP 16 — Build the webhook
+Create an endpoint such as:
+/api/payment/webhook
+The payment gateway sends information there.
+Your server should verify:
+1. Signature
+Is this webhook genuinely from the gateway?
+2. Payment status
+Is it actually successful?
+3. Amount
+Does it equal the expected amount?
+4. Payment ID
+Has this payment already been processed?
+If all checks pass:
+CREATE COUPON
+STEP 17 — Assign the coupon
+Your backend finds the next available number.
+For example:
+1 → SOLD
+2 → SOLD
+3 → SOLD
+4 → AVAILABLE
+It locks number:
+0004
+Then generates:
+SKL26-R7M4-38QA
+and saves:
+Coupon Number = 0004
+Coupon Code = SKL26-R7M4-38QA
+Payment ID = PAY12345
+Status = VALID
+STEP 18 — Prevent race conditions
+This matters when multiple people pay simultaneously.
+Imagine:
+Customer A → payment success
+Customer B → payment success
+Both systems try to obtain coupon 0005.
+You must use a database transaction/atomic allocation so only one gets it.
+Never implement:
+Find next number
+↓
+Wait
+↓
+Save
+without protection.
+Otherwise two people could receive the same coupon.
+STEP 19 — Generate the QR
+After creating:
+SKL26-R7M4-38QA
+generate:
+https://yourdomain.in/verify/SKL26-R7M4-38QA
+Convert that URL into a QR image.
+Then place the QR onto your coupon template.
+STEP 20 — Generate the digital coupon
+Your backend combines:
+Template
++
+Coupon Number
++
+Unique Code
++
+QR
++
+Event information
+and creates:
+PNG
+and optionally:
+PDF
+Save it as:
+coupon-0004.png
+or:
+SKL26-0004.pdf
+Store the file securely and save its location in the database.
+STEP 21 — Create the success page
+After successful payment:
+🎉 PAYMENT SUCCESSFUL
+
+Your digital coupon has been generated.
+
+COUPON NO.
+0004
+
+CODE
+SKL26-R7M4-38QA
+
+[VIEW COUPON]
+
+[DOWNLOAD]
+
+[SHARE]
+Don't expose administrative information.
+STEP 22 — Email delivery
+Send an automated email:
+Subject: Your Digital Coupon – Sakleshpur Fest 2026
+Include:
+Coupon number
+Coupon code
+Event
+Date
+Verification link
+Coupon image/PDF
+The email should be sent only after confirmed payment.
+STEP 23 — WhatsApp delivery
+For WhatsApp automation, use an appropriate WhatsApp Business/API provider rather than trying to automate a personal WhatsApp account.
+Flow:
+Payment successful
+       ↓
+Coupon generated
+       ↓
+WhatsApp API
+       ↓
+Customer receives message
+Example:
+🎟️ Your digital coupon has been generated.
+Coupon No: 0004
+Code: SKL26-R7M4-38QA
+Scan your coupon QR or visit the verification link to verify it.
+Thank you for participating.
+You may need an approved WhatsApp message template depending on the messaging flow.
+STEP 24 — Create the admin dashboard
+Create:
+/admin
+Protect it with authentication.
+Dashboard:
+SALES
+Coupons sold: 472 / 1000
+Collection: ₹47,200
+Remaining: 528
+PAYMENTS
+Successful
+Pending
+Failed
+Refunded
+COUPONS
+Valid
+Cancelled
+Used
+DELIVERY
+Email sent
+WhatsApp sent
+Failed
+RESULT
+Eligible coupons
+Result status
+Selected result
+STEP 25 — Add search
+Admin should be able to search:
+Coupon Number
+Coupon Code
+Name
+Mobile
+Payment ID
+Example:
+Search:
+0472
+Returns:
+Coupon: 0472
+Code: SKL26-X7P4-92KM
+Payment: SUCCESS
+Status: VALID
+Delivery: SENT
+Winner: NO
+STEP 26 — Add cancellation control
+Admin can change:
+VALID
+↓
+CANCELLED
+but never delete the record.
+This is important for auditability.
+Keep:
+Original record
+Cancellation reason
+Admin
+Timestamp
+STEP 27 — Set the 1,000 limit
+Your backend should have:
+MAX_COUPONS = 1000
+Before issuing a coupon:
+Check issued count
+
+If count < 1000:
+    generate coupon
+
+If count >= 1000:
+    stop sales
+The limit must be enforced server-side, not just by hiding a button on the website.
+STEP 28 — Build your legal/information pages
+Website footer:
+Terms & Conditions
+Privacy Policy
+Refund Policy
+Eligibility
+Promotion Rules
+Contact Us
+Don't hide the rules.
+The customer should be able to see them before payment.
+STEP 29 — Test before launch
+Don't immediately launch.
+Create a TEST MODE.
+Run at least:
+Test 1
+Successful ₹100 test payment.
+Expected:
+Payment → Coupon → QR → Email
+Test 2
+Failed payment.
+Expected:
+No coupon
+Test 3
+Payment cancelled.
+Expected:
+No coupon
+Test 4
+Duplicate webhook.
+Expected:
+Only ONE coupon
+Test 5
+Two simultaneous payments.
+Expected:
+Two different coupons
+Test 6
+Fake coupon.
+Expected:
+INVALID
+Test 7
+Valid QR.
+Expected:
+VALID
+Test 8
+Cancelled coupon.
+Expected:
+CANCELLED
+Test 9
+Coupon 1,000.
+Expected:
+SELLING STOPPED
+STEP 30 — Do a 20-coupon pilot
+Before opening all 1,000:
+Run a controlled test with 20 test participants.
+Measure:
+Payment success
+Coupon generation time
+QR scanning
+Email delivery
+WhatsApp delivery
+Database accuracy
+Admin dashboard
+Customer experience
+Only after this works reliably should you open the full capacity.
+STEP 31 — Launch
+Your launch page should have:
+HERO
+SAKLESHPUR FEST 2026
+COUPONS
+₹100
+AVAILABILITY
+742 / 1,000 AVAILABLE
+CTA
+GET DIGITAL COUPON
+Then explain:
+1. Register
+2. Complete payment
+3. Receive your digital coupon
+4. Verify using QR
+5. Check result according to official rules
+STEP 32 — Marketing tracking
+Create separate links:
+Instagram
+/landing?source=instagram
+
+WhatsApp
+/landing?source=whatsapp
+
+Facebook
+/landing?source=facebook
+
+Poster
+/landing?source=poster
+Then your dashboard can show:
+Source
+Visitors
+Payments
+Instagram
+2,500
+140
+WhatsApp
+1,800
+210
+Facebook
+900
+60
+Poster
+500
+35
+Now you know where your ₹100 marketing effort is working.
+STEP 33 — Make the coupon shareable
+After receiving the coupon, show:
+SHARE
+Customer can share:
+🎟️ I just registered for Sakleshpur Fest 2026. Check out the official event here: [link]
+Avoid automatically creating referral rewards that effectively give people additional random chances unless your legal review specifically approves that structure.
+STEP 34 — Prepare the result system
+Before the result:
+LOCK DATABASE
+No changes to eligibility after the cutoff except documented administrative corrections.
+Export:
+Coupon No.
+Coupon Code
+Eligibility
+Status
+Preserve the file with timestamp/hash if your legal/compliance process calls for it.
+Then conduct the result using the approved mechanism.
+STEP 35 — Publish the result
+Your website can show:
+RESULT
+Sakleshpur Fest 2026
+Winning Coupon:
+SKL26-R7M4-38QA
+Verification:
+🟢 VERIFIED
+Result date:
+06-09-2026
+Keep the result page permanently available.
+STEP 36 — Your final technology stack
+For your first 1,000 coupons, I'd use:
+Component
+Recommended approach
+Domain
+.in domain
+Website
+Next.js/simple web app
+Hosting
+Vercel/Cloudflare or equivalent
+Database
+Supabase
+Authentication
+Supabase Auth
+Payment
+Indian payment gateway
+Coupon generator
+Python/Node.js
+QR
+QR library
+Storage
+Supabase Storage
+Email
+Transactional email provider
+WhatsApp
+WhatsApp Business/API provider
+Analytics
+Google Analytics/alternative
+Admin
+Custom dashboard
+Design
+Canva
+This is much better than trying to run the entire operation through Google Forms + UPI screenshots + WhatsApp manually.
+The minimum viable version
+If you want to keep the first version extremely simple, build only these 8 components:
+1. Landing page
+↓
+2. Registration form
+↓
+3. Payment gateway
+↓
+4. Database
+↓
+5. Unique coupon generator
+↓
+6. QR verification
+↓
+7. WhatsApp/email delivery
+↓
+8. Admin dashboard
+That is enough to handle 1,000 coupons professionally.
+One important recommendation
+Don't start by generating the 1,000 coupon images. Generate the coupon codes and database structure first, then generate a coupon only after a verified payment. This prevents unused coupons, duplicate codes, and unnecessary storage.
+If you want to actually build this yourself, the next logical step is to set up the exact database + website + payment + coupon-generation architecture, including the folder structure, database tables, API endpoints, and code flow.
